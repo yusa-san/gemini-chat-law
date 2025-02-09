@@ -13,7 +13,10 @@ function App() {
   useEffect(() => {
     const loadHistory = () => {
       fetchHistory()
-        .then(data => setMessages(data))
+        .then(data => {
+          console.log('Fetched history:', data);  // ここで取得データを確認
+          setMessages(data);
+        })
         .catch(err => setError(err.message));
     };
 
@@ -26,11 +29,16 @@ function App() {
 
   // 新規メッセージ送信時のハンドラ
   const handleSend = (text) => {
+    console.log('App: Sending message:', text); // 送信テキストを確認
     const payload = { question: text }; // キーをquestionに変更
     sendMessage(payload)
       .then(response => {
+        console.log('App: Message sent, response:', response); // 送信後のレスポンスを確認
         // 送信成功後、即時メッセージを追加（または履歴の再取得でも可）
-        setMessages(prev => [...prev, response]);
+      // 送信後、履歴の再取得を実施
+      fetchHistory()
+        .then(data => setMessages(data))
+        .catch(err => setError(err.message));
       })
       .catch(err => setError(err.message));
   };
@@ -45,6 +53,7 @@ function App() {
   return (
     <div className="app-container">
       <ChatWindow messages={messages} />
+      {/* onSend プロパティとして handleSend を渡す */}
       <ChatInput onSend={handleSend} />
       {error && <ErrorModal message={error} onClose={handleCloseError} />}
     </div>

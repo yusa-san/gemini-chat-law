@@ -12,8 +12,8 @@ import React from 'react';
 //}
 
 function Message({ message }) {
-  // partsは配列なので、すべての要素を結合してひとつの文字列にする
-  const text = message.parts.join(" ");
+  // message.parts が存在し、配列であれば結合してテキストにする
+  const text = Array.isArray(message.parts) ? message.parts.join(" ") : '';
   
   return (
     <div className="message">
