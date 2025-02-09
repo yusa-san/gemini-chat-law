@@ -1,0 +1,13 @@
+steps:
+  # Backend のイメージビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'gemini_chat_backend/Dockerfile'        # バックエンド用Dockerfileのパス
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/backend-image'   # ビルド後のイメージ名（タグ付け）
+      - 'gemini_chat_backend'                   # コンテキスト。backendディレクトリ内のファイルを使用
+
+images:
+  - 'gcr.io/$PROJECT_ID/backend-image'
