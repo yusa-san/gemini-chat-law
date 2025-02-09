@@ -1,4 +1,4 @@
-const API_BASE = 'https://gemini-chat-233096540107.asia-northeast1.run.app'; // Cloud Run のURLに置き換えてください
+const API_BASE = 'https://gemini-chat-law-backend-233096540107.asia-northeast1.run.app'; // Cloud Run のURLに置き換えてください
 
 export async function fetchHistory() {
   const response = await fetch(`${API_BASE}/history`);
