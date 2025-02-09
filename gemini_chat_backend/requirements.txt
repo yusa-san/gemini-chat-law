@@ -1,0 +1,4 @@
+Flask==2.3.3
+google-cloud-aiplatform
+flask-cors
+gunicorn==20.1.0
