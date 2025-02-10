@@ -27,7 +27,7 @@ app = Flask(__name__)
 # CORSの設定
 # CORS(app) # すべてのURLからのアクセスを許可
 CORS(app, supports_credentials=True,
-    resources={r"/*": {"origins": "http://localhost:5173/"}}) # 特定のURLからのアクセスのみ許可
+    resources={r"/*": {"origins": "http://localhost:5173"}}) # 特定のURLからのアクセスのみ許可
 
 # Flaskのセッション管理用シークレットキー
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") # 例: "your-secret-key"
