@@ -18,6 +18,7 @@ export async function sendMessage(payload) {
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include', // POSTリクエストでもクッキーを含める
     body: JSON.stringify(payload),
   });
   if (!response.ok) {

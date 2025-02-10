@@ -33,7 +33,7 @@ CORS(app, supports_credentials=True,
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") # 例: "your-secret-key"
 
 # クッキーは HTTPS 経由のみ送信（Cloud Run は HTTPS なので問題ありません）
-app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SECURE'] = False # ローカルでのテスト用に False にしています
 # クロスオリジンでセッションを共有するために SameSite 属性は 'None' にする必要があります
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 # セキュリティのため、JavaScript からのアクセスは不可に（デフォルトで True になっているが明示的に）
