@@ -189,8 +189,8 @@ def catch_all(path):
 
         # システムプロンプトとユーザーの質問を組み合わせてメッセージを作成
         response = chat.send_message(
-            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)]),
-            grounding_config=grounding_config # Grounding 設定を追加
+            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)])
+            # grounding_config=grounding_config # Grounding 設定を追加
         )
         gemini_answer = response.text
 
