@@ -1,8 +1,8 @@
 # 必要なライブラリをインポート
 import vertexai
-from vertexai.generative_models import GenerativeModel, Content, Part, GroundingConfig, GoogleSearchRetrieval
+from vertexai.generative_models import GenerativeModel, Content, Part
 import os
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sys
 import traceback

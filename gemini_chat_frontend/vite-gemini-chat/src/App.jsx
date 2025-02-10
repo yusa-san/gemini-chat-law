@@ -43,6 +43,12 @@ function App() {
       .catch(err => setError(err.message));
   };
 
+  // チャット履歴をクリアするハンドラ
+  const handleClearChat = () => {
+    // ここではフロントエンド側の state をクリアする
+    setMessages([]);
+  };
+
   // エラーモーダルの閉じるときの処理を修正：前のページに戻るのではなく、単にエラーをクリアする
   const handleCloseError = () => {
     setError(null);
