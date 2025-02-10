@@ -1,4 +1,8 @@
 # 必要なライブラリをインポート
+import os
+import sys
+import traceback
+import requests
 import vertexai
 from vertexai.generative_models import GenerativeModel, Content, Part
 import os
@@ -15,6 +19,7 @@ import uuid # UUID生成用
 # 環境変数からAPIキーとプロジェクトIDを取得（安全な方法）
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT") # 例: "your-project-id"
 API_KEY = os.environ.get("VERTEX_AI_API_KEY") # 例: "your-api-key"
+PERPLEXITY_API_KEY = os.environ.get("PERPLEXITY_API_KEY")  # Perplexity API用のAPIキー
 LOCATION = "asia-northeast1" # リージョンを指定
 
 # Vertex AIを初期化
@@ -144,6 +149,34 @@ B) 訂正があった場合：
 変換前：「お越しいただく必要はありません」
 変換後：「来なくてもいいです」"""
 
+# --- Perplexity API を呼び出すためのヘルパー関数 ---
+def search_with_perplexity(query):
+    """
+    Perplexity API を呼び出して検索結果を取得する関数の例です。
+    ※ エンドポイントURLやパラメータは、実際の仕様に合わせて変更してください。
+    """
+    try:
+        # ※下記のURLはサンプルです。実際のエンドポイントURLに変更してください。
+        perplexity_url = "https://api.perplexity.ai/search"
+        headers = {
+            "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "query": query
+        }
+        response = requests.post(perplexity_url, json=payload, headers=headers)
+        if response.status_code == 200:
+            # レスポンスJSONの中の検索結果（例として "result" フィールド）を取得
+            result = response.json().get("result", "")
+            return result
+        else:
+            sys.stderr.write(f"[ERROR] Perplexity API error: {response.status_code} {response.text}\n")
+            return "検索結果が得られませんでした"
+    except Exception as e:
+        sys.stderr.write(f"[ERROR] Exception during Perplexity API call: {str(e)}\n")
+        return "検索中にエラーが発生しました"
+
 # チャットの処理をする関数
 @app.route("/<path:path>", methods=["POST"])
 def catch_all(path):
@@ -179,12 +212,20 @@ def catch_all(path):
             sys.stderr.write(f"[ERROR] Exception: {errmsg}")  # スタックトレースを表示
             return jsonify({"error": str(e)}), 500
 
+        # ① Perplexity API による検索結果を取得
+        search_result = search_with_perplexity(user_question)
+        sys.stderr.write(f"[DEBUG] Perplexity search result: {search_result}\n")
+
+        # ② 検索結果を踏まえたプロンプトを作成する
+        # ここでは「検索結果: <検索結果> に基づいて、質問: <質問> に答えてください」という例です。
+        prompt = f"検索結果: {search_result}\n\n上記の情報を踏まえて、以下の質問に答えてください:\n{user_question}"
+
         if chat is None:
             chat = model.start_chat()
-
+        
         # システムプロンプトとユーザーの質問を組み合わせてメッセージを作成
         response = chat.send_message(
-            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)])
+            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + prompt)])
         )
         gemini_answer = response.text
 
