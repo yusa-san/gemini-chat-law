@@ -1,6 +1,6 @@
 # 必要なライブラリをインポート
 import vertexai
-from vertexai.generative_models import GenerativeModel, Content, Part
+from vertexai.generative_models import GenerativeModel, Content, Part, GroundingConfig, GoogleSearchRetrieval
 import os
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
@@ -45,7 +45,7 @@ SYSTEM_PROMPT = """あなたは法律を分かりやすく解説するAIアシ�
 第1.基本的な応答プロセス
 
 0. あいさつ
-- 相談者に対して、挨拶を行う
+- 初めの1回のみ、相談者に対して、挨拶を行う
 - 以下の形式で行う：
 「こんにちは！私は法律を分かりやすく解説するAIアシスタントです。
 どのようなご相談がありますか？」
@@ -65,7 +65,7 @@ SYSTEM_PROMPT = """あなたは法律を分かりやすく解説するAIアシ�
 1. 回答フェーズ
 相談者の反応に応じて2つの対応を行う：
 A)「回答を続けて」の場合：
-- どんな質問も必ずウェブ検索をしてから回答する　★必ず守る
+- どんな質問も必ずGoogle Search Groundingでウェブ検索をしてから回答する　★必ず守る
 - 関連する法令や制度について、ウェブ上の複数の公的解説を参照した回答を提供
 - 具体的な対応手順を示す
 
@@ -182,9 +182,15 @@ def catch_all(path):
         if chat is None:
             chat = model.start_chat()
 
+        # Google Search Grounding の設定
+        grounding_config = GroundingConfig(
+            sources=[GoogleSearchRetrieval(disable_attribution=False)],  # Google Search を使用
+        )
+
         # システムプロンプトとユーザーの質問を組み合わせてメッセージを作成
         response = chat.send_message(
-            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)])
+            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)]),
+            grounding_config=grounding_config # Grounding 設定を追加
         )
         gemini_answer = response.text
 
