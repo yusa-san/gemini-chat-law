@@ -26,10 +26,18 @@ app = Flask(__name__)
 
 # CORSの設定
 # CORS(app) # すべてのURLからのアクセスを許可
-CORS(app, supports_credentials=True) # supports_credentials=Trueを指定してクッキーを許可
+CORS(app, supports_credentials=True,
+    resources={r"/*": {"origins": "http://localhost:5173/"}}) # 特定のURLからのアクセスのみ許可
 
 # Flaskのセッション管理用シークレットキー
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") # 例: "your-secret-key"
+
+# クッキーは HTTPS 経由のみ送信（Cloud Run は HTTPS なので問題ありません）
+app.config['SESSION_COOKIE_SECURE'] = True
+# クロスオリジンでセッションを共有するために SameSite 属性は 'None' にする必要があります
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+# セキュリティのため、JavaScript からのアクセスは不可に（デフォルトで True になっているが明示的に）
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # jsonifyの日本語文字化け防止
 app.json.ensure_ascii = False
