@@ -135,6 +135,7 @@ def get_history():
     # セッションから会話履歴を取得 (なければ空のリスト)
     serialized_history = session.get('history', [])
     history = deserialize_history(serialized_history)
+    sys.stderr.write(f"[DEBUG] History: {history}")
 
     #表示用に整形
     formatted_history = []
