@@ -121,6 +121,9 @@ def catch_all(path):
         # 新しい会話履歴をセッションに保存 (シリアライズ)
         session['history'] = serialize_history(chat.history)
 
+        # セッションを更新
+        session.modified = True
+
         # ユーザーに回答を返す
         return jsonify({'answer': gemini_answer})
 
