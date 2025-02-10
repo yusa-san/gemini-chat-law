@@ -24,62 +24,24 @@ model = GenerativeModel("gemini-1.5-pro-002") #モデルは状況によって、
 # Flaskを使ってWebアプリケーションを作成
 app = Flask(__name__)
 
-# CORSの設定
-# CORS(app) # すべてのURLからのアクセスを許可
+# CORSの設定 # 特定のURLからのアクセスのみ許可
 CORS(app, supports_credentials=True,
-    resources={r"/*": {"origins":"http://localhost:5173"}}) # 特定のURLからのアクセスのみ許可
-
-# Flaskのセッション管理用シークレットキー
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") # 例: "your-secret-key"
-
-# クッキーは HTTPS 経由のみ送信（Cloud Run は HTTPS なので問題ありません）
-app.config['SESSION_COOKIE_SECURE'] = False # ローカルでのテスト用に False にしています
-# クロスオリジンでセッションを共有するために SameSite 属性は 'None' にする必要があります
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-# セキュリティのため、JavaScript からのアクセスは不可に（デフォルトで True になっているが明示的に）
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+    resources={r"/*": {"origins":"http://localhost:5173"}})
 
 # jsonifyの日本語文字化け防止
 app.json.ensure_ascii = False
 
-def serialize_history(history):
-    """会話履歴 (Content オブジェクトのリスト) をシリアライズ可能な形式に変換"""
-    serialized_history = []
-    try:
-        for turn in history:
-            serialized_history.append({
-                "role": turn.role,
-                "parts": [{"text": part.text} for part in turn.parts]  # Part オブジェクトは text のみ
-            })
-    except Exception as e:
-        errmsg = traceback.format_exc()
-        sys.stderr.write(f"[ERROR] Exception: {errmsg}")  # スタックトレースを表示
-    return serialized_history
-
-def deserialize_history(serialized_history):
-    """シリアライズされた会話履歴から Content オブジェクトのリストを復元"""
-    history = []
-    try:
-        for turn in serialized_history:
-            history.append(Content(
-                role=turn["role"],
-                parts=[Part.from_text(part["text"]) for part in turn["parts"]]
-            ))
-    except Exception as e:
-        errmsg = traceback.format_exc()
-        sys.stderr.write(f"[ERROR] Exception: {errmsg}")  # スタックトレースを表示
-    return history
+# グローバル変数でチャット履歴を保持（デバッグ用）
+chat = None
 
 # チャットの処理をする関数
 @app.route("/<path:path>", methods=["POST"])
 def catch_all(path):
     sys.stderr.write(f"[DEBUG] Received request at: {path}")
     sys.stderr.write(f"[DEBUG] Headers: {request.headers}")
-    sys.stderr.write(f"[DEBUG] Data: {request.data}")
+    sys.stderr.write(f"[DEBUG] Received Data: {request.data}")
 
-    # セッションIDを取得（なければ新規作成）
-    if 'session_id' not in session:
-        session['session_id'] = str(uuid.uuid4())
+    global chat
 
     # ユーザーからの質問を受け取る
     if not request.data:
@@ -107,25 +69,10 @@ def catch_all(path):
             sys.stderr.write(f"[ERROR] Exception: {errmsg}")  # スタックトレースを表示
             return jsonify({"error": str(e)}), 500
 
-        # セッションからchatオブジェクトを取得（なければ新規取得）
-        serialized_history = session.get('history', [])
-        history = deserialize_history(serialized_history)
-
-        # 会話履歴を使って新しい chat オブジェクトを作成
-        chat = model.start_chat(history=history)
-
-        # Gemini APIを使って回答を生成
+        if chat is None:
+            chat = model.start_chat()
         response = chat.send_message(Part.from_text(user_question))
         gemini_answer = response.text
-
-        # 新しい会話履歴をセッションに保存 (シリアライズ)
-        session['history'] = serialize_history(chat.history)
-
-        # デバッグ用に会話履歴を表示
-        sys.stderr.write(f"[DEBUG] Saved history: {session.get('history')}\n")
-
-        # セッションを更新
-        session.modified = True
 
         # ユーザーに回答を返す
         return jsonify({'answer': gemini_answer})
@@ -138,20 +85,18 @@ def catch_all(path):
 # チャット履歴を取得する関数
 @app.route('/history', methods=['GET'])
 def get_history():
-    # セッションから会話履歴を取得 (なければ空のリスト)
-    serialized_history = session.get('history', [])
-    history = deserialize_history(serialized_history)
-    sys.stderr.write(f"[DEBUG] History: {history}")
 
-    #表示用に整形
-    formatted_history = []
+    global chat
+
+    history = []
     try:
-        for turn in history:
-            formatted_history.append({
-                "role": turn.role,
-                "parts": [part.text for part in turn.parts]
+        if chat:
+            for turn in chat.history:
+                history.append({
+                    "role": turn.role,
+                    "parts": [part.text for part in turn.parts]
                 })
-        return jsonify({'history': formatted_history})
+        return jsonify({'history': history})
 
     except Exception as e:
         errmsg = traceback.format_exc()
@@ -161,7 +106,7 @@ def get_history():
 # ホームページを表示する関数
 @app.route("/")
 def home():
-    return "Hello, Cloud Run!"
+    return "Hello World!"
 
 # アプリケーションを実行
 if __name__ == '__main__':
