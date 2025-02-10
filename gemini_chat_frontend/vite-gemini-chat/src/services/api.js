@@ -2,7 +2,7 @@ const API_BASE = 'https://gemini-chat-law-backend-233096540107.asia-northeast1.r
 
 export async function fetchHistory() {
   const response = await fetch(`${API_BASE}/history`, {
-    cache: 'no-cache' // , credentials: 'include' // クロスオリジンでクッキーを含めて送信する場合
+    cache: 'no-cache' // , credentials: 'include' // クロスオリジンでクッキーを含め送信する場合
   });
   if (!response.ok) {
     throw new Error('チャット履歴の取得に失敗しました');
