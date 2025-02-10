@@ -183,12 +183,9 @@ def catch_all(path):
             chat = model.start_chat()
 
         # システムプロンプトとユーザーの質問を組み合わせてメッセージを作成
-        messages = [
-            Part.from_text(SYSTEM_PROMPT),  # システムプロンプト
-            Part.from_text(user_question),   # ユーザーの質問
-        ]
-
-        response = chat.send_message(messages)
+        response = chat.send_message(
+            Content(role="user", parts=[Part.from_text(SYSTEM_PROMPT + "\n" + user_question)])
+        )
         gemini_answer = response.text
 
         if chat:
@@ -215,10 +212,13 @@ def get_history():
     try:
         if chat:
             for turn in chat.history:
-                history.append({
-                    "role": turn.role,
-                    "parts": [part.text for part in turn.parts]
-                })
+                # システムプロンプトは履歴に含めない
+                if turn.role == "user" and turn.parts[0].text.startswith(SYSTEM_PROMPT):
+                    # システムプロンプト部分を除去して、質問部分だけ取得
+                    question = turn.parts[0].text.replace(SYSTEM_PROMPT, "").strip()
+                    history.append({"role": "user", "parts": [question]})
+                elif turn.role == "model":
+                    history.append({"role": "model", "parts": [turn.parts[0].text]})
         return jsonify({'history': history})
 
     except Exception as e:
