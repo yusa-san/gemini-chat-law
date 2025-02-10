@@ -78,7 +78,8 @@ def catch_all(path):
         response = chat.send_message(Part.from_text(user_question))
         gemini_answer = response.text
 
-        sys.stderr.write(f"[DEBUG] Chat History: {chat.history}")
+        if chat:
+            sys.stderr.write(f"[DEBUG] Chat History: {chat.history}")
 
         # ユーザーに回答を返す
         return jsonify({'answer': gemini_answer})
@@ -93,7 +94,9 @@ def catch_all(path):
 def get_history():
 
     global chat
-    sys.stderr.write(f"[DEBUG] Chat History: {chat.history}")
+
+    if chat:
+        sys.stderr.write(f"[DEBUG] Chat History: {chat.history}")
 
     history = []
     try:
