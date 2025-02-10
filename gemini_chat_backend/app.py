@@ -8,7 +8,7 @@ import sys
 import traceback
 import uuid # UUID生成用
 
-# バックエンドではセッション管理を行わない
+# バックエンドではセッション管理を行わないことにした
 
 # 環境変数からAPIキーとプロジェクトIDを取得（安全な方法）
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT") # 例: "your-project-id"
