@@ -12,10 +12,10 @@ import React from 'react';
 //}
 
 function Message({ message }) {
-  // message.parts が存在する場合、各パートの text を取り出して結合する
+  // parts が文字列の配列の場合はそのまま、オブジェクトの場合は part.text を取り出す
   const text = Array.isArray(message.parts)
-    ? message.parts.map(part => part.text).join(" ")
-    : '';
+  ? message.parts.map(part => (typeof part === 'string' ? part : part.text)).join(" ")
+  : '';
   
   return (
     <div className="message">
