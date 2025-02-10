@@ -121,6 +121,9 @@ def catch_all(path):
         # 新しい会話履歴をセッションに保存 (シリアライズ)
         session['history'] = serialize_history(chat.history)
 
+        # デバッグ用に会話履歴を表示
+        sys.stderr.write(f"[DEBUG] Saved history: {session.get('history')}\n")
+
         # セッションを更新
         session.modified = True
 
